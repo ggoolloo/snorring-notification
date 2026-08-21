@@ -88,7 +88,7 @@ final class SnoreAudioMonitor: ObservableObject {
 
     private func configureAudioSession() throws {
         let session = AVAudioSession.sharedInstance()
-        try session.setCategory(.record, mode: .measurement, options: [.allowBluetooth])
+        try session.setCategory(.record, mode: .measurement, options: [.allowBluetoothHFP])
         try session.setActive(true)
     }
 
@@ -126,8 +126,9 @@ final class SnoreAudioMonitor: ObservableObject {
                 isSnoring = true
                 activeEvent = SnoreEvent(startedAt: date, peakConfidence: confidence)
                 notifications.startRepeating(interval: settings.repeatInterval)
-            } else {
-                activeEvent?.peakConfidence = max(activeEvent?.peakConfidence ?? 0, confidence)
+            } else if var event = activeEvent {
+                event.peakConfidence = max(event.peakConfidence, confidence)
+                activeEvent = event
             }
 
             return
@@ -156,14 +157,6 @@ final class SnoreAudioMonitor: ObservableObject {
     }
 
     private func requestMicrophoneAccess() async -> Bool {
-        if #available(iOS 17.0, *) {
-            return await AVAudioApplication.requestRecordPermission()
-        }
-
-        return await withCheckedContinuation { continuation in
-            AVAudioSession.sharedInstance().requestRecordPermission { granted in
-                continuation.resume(returning: granted)
-            }
-        }
+        await AVAudioApplication.requestRecordPermission()
     }
 }
