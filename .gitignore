@@ -1,0 +1,8 @@
+.DS_Store
+DerivedData/
+*.xcuserdata/
+*.m4a
+*.mp3
+*.wav
+*.caf
+

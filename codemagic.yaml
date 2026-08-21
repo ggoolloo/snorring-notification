@@ -1,0 +1,28 @@
+workflows:
+  ios-native-testflight:
+    name: SnoreAlert iOS Native
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: codemagic
+    environment:
+      xcode: latest
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: sk.local.SnoreAlert
+      vars:
+        XCODE_PROJECT: SnoreAlert/SnoreAlert.xcodeproj
+        XCODE_SCHEME: SnoreAlert
+    scripts:
+      - name: Set up code signing settings
+        script: xcode-project use-profiles
+      - name: Build signed IPA
+        script: |
+          xcode-project build-ipa \
+            --project "$CM_BUILD_DIR/$XCODE_PROJECT" \
+            --scheme "$XCODE_SCHEME"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+
