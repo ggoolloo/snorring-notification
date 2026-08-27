@@ -25,6 +25,6 @@ final class AppSettings: ObservableObject {
     init() {
         sensitivity = UserDefaults.standard.object(forKey: Keys.sensitivity) as? Float ?? 0.72
         repeatInterval = UserDefaults.standard.object(forKey: Keys.repeatInterval) as? Double ?? 3.0
-        stopDelay = UserDefaults.standard.object(forKey: Keys.stopDelay) as? Double ?? 4.0
+        stopDelay = UserDefaults.standard.object(forKey: Keys.stopDelay) as? Double ?? 7.0
     }
 }

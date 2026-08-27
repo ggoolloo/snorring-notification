@@ -115,7 +115,7 @@ struct ContentView: View {
             HStack {
                 Text("\(Int(monitor.decibels)) dB")
                 Spacer()
-                Text("Low band \(Int(monitor.lowBandRatio * 100)) %")
+                Text("Rytmus \(Int(monitor.rhythmScore * 100)) %")
             }
             .font(.caption)
             .foregroundStyle(.secondary)
@@ -176,4 +176,3 @@ struct ContentView: View {
         .environmentObject(settings)
         .environmentObject(SnoreAudioMonitor(settings: settings))
 }
-

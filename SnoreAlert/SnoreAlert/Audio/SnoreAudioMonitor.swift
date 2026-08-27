@@ -15,6 +15,7 @@ final class SnoreAudioMonitor: ObservableObject {
     @Published private(set) var confidence: Float = 0
     @Published private(set) var decibels: Float = -120
     @Published private(set) var lowBandRatio: Float = 0
+    @Published private(set) var rhythmScore: Float = 0
     @Published private(set) var events: [SnoreEvent] = []
 
     private let settings: AppSettings
@@ -78,6 +79,7 @@ final class SnoreAudioMonitor: ObservableObject {
         DispatchQueue.main.async {
             self.isSnoring = false
             self.confidence = 0
+            self.rhythmScore = 0
             self.state = .idle
         }
     }
@@ -98,7 +100,7 @@ final class SnoreAudioMonitor: ObservableObject {
 
         detector.reset()
         input.removeTap(onBus: 0)
-        input.installTap(onBus: 0, bufferSize: 4_096, format: format) { [weak self] buffer, _ in
+        input.installTap(onBus: 0, bufferSize: 8_192, format: format) { [weak self] buffer, _ in
             self?.process(buffer: buffer)
         }
 
@@ -114,6 +116,7 @@ final class SnoreAudioMonitor: ObservableObject {
             self.confidence = analysis.confidence
             self.decibels = analysis.decibels
             self.lowBandRatio = analysis.lowBandRatio
+            self.rhythmScore = analysis.rhythmScore
             self.updateSnoringState(isDetected: analysis.isSnoring, at: now)
         }
     }
