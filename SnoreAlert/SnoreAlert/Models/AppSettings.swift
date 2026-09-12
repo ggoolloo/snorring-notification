@@ -31,17 +31,19 @@ final class AppSettings: ObservableObject {
     init() {
         let storedVersion = UserDefaults.standard.integer(forKey: Keys.settingsVersion)
         let storedSensitivity = UserDefaults.standard.object(forKey: Keys.sensitivity) as? Float
+        let migratedSensitivity: Float
 
         if storedVersion == 0, let oldThreshold = storedSensitivity {
-            sensitivity = min(max(1.37 - oldThreshold, 0.45), 0.92)
-            UserDefaults.standard.set(sensitivity, forKey: Keys.sensitivity)
-            UserDefaults.standard.set(2, forKey: Keys.settingsVersion)
+            migratedSensitivity = min(max(1.37 - oldThreshold, 0.45), 0.92)
         } else {
-            sensitivity = storedSensitivity ?? 0.72
-            UserDefaults.standard.set(2, forKey: Keys.settingsVersion)
+            migratedSensitivity = storedSensitivity ?? 0.72
         }
 
+        sensitivity = migratedSensitivity
         repeatInterval = UserDefaults.standard.object(forKey: Keys.repeatInterval) as? Double ?? 3.0
         stopDelay = UserDefaults.standard.object(forKey: Keys.stopDelay) as? Double ?? 7.0
+
+        UserDefaults.standard.set(migratedSensitivity, forKey: Keys.sensitivity)
+        UserDefaults.standard.set(2, forKey: Keys.settingsVersion)
     }
 }
