@@ -41,6 +41,9 @@ struct ContentView: View {
                                 .foregroundStyle(.secondary)
                         }
                         Slider(value: sensitivityBinding, in: 0.45...0.92, step: 0.01)
+                        Text("Vyssie cislo znamena citlivejsiu detekciu.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
 
                     VStack(alignment: .leading, spacing: 8) {
@@ -63,6 +66,9 @@ struct ContentView: View {
                                 .foregroundStyle(.secondary)
                         }
                         Slider(value: stopDelayBinding, in: 2...12, step: 1)
+                        Text("Efektivne teraz \(Int(monitor.effectiveStopDelay)) s podla rytmu dychu.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
                 }
 
@@ -119,6 +125,12 @@ struct ContentView: View {
             }
             .font(.caption)
             .foregroundStyle(.secondary)
+
+            if !monitor.detectionReason.isEmpty {
+                Text(monitor.detectionReason)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
         }
     }
 

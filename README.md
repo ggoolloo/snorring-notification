@@ -6,7 +6,7 @@ SnoreAlert is an iPhone app prototype for detecting snoring while the screen is 
 
 - SwiftUI iOS app scaffold.
 - Background microphone mode via `UIBackgroundModes = audio`.
-- Local on-device snoring heuristic over microphone buffers.
+- Local on-device snoring detector that combines acoustic features, separate breath-like pulses, breathing rhythm, and optional Apple SoundAnalysis support.
 - Repeated silent local notifications while snoring continues.
 - Settings for sensitivity, repeat interval, and stop delay.
 - Sample folders for future personalization/training.
@@ -24,7 +24,9 @@ Upload audio samples into:
 
 Please use only recordings where everyone recorded has consented. The first useful batch can be small: 10-20 minutes of snoring and 30+ minutes of non-snoring is enough to start testing a personalized classifier.
 
-Supported formats for the future training pipeline: WAV, M4A, MP3, CAF.
+Supported formats for local diagnostics or future training: WAV, M4A, MP3, CAF.
+
+The helper script `scripts/snore_replay.py` can replay local M4A samples on Windows when PyAV and NumPy are available in `%TEMP%\snore-review-deps`. It does not send notifications and does not upload recordings.
 
 ## Garmin setup
 

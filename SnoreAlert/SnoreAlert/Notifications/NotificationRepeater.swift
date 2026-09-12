@@ -5,6 +5,8 @@ final class NotificationRepeater: NSObject, UNUserNotificationCenterDelegate {
     private let center = UNUserNotificationCenter.current()
     private let queue = DispatchQueue(label: "snorealert.notification-repeater")
     private var timer: DispatchSourceTimer?
+    private var generation = 0
+    private var ownedRequestIdentifiers: [String] = []
 
     override init() {
         super.init()
@@ -19,27 +21,64 @@ final class NotificationRepeater: NSObject, UNUserNotificationCenterDelegate {
         }
     }
 
-    func startRepeating(interval: TimeInterval) {
-        stopRepeating()
-        sendNotification()
+    func startRepeating(
+        interval: TimeInterval,
+        shouldContinue: @escaping () -> Bool
+    ) {
+        queue.async { [weak self] in
+            guard let self else {
+                return
+            }
 
-        let safeInterval = max(interval, 1.5)
-        let newTimer = DispatchSource.makeTimerSource(queue: queue)
-        newTimer.schedule(deadline: .now() + safeInterval, repeating: safeInterval)
-        newTimer.setEventHandler { [weak self] in
-            self?.sendNotification()
+            self.generation += 1
+            let currentGeneration = self.generation
+            self.timer?.cancel()
+            self.timer = nil
+
+            self.sendNotificationIfValid(generation: currentGeneration, shouldContinue: shouldContinue)
+
+            let safeInterval = max(interval, 1.5)
+            let newTimer = DispatchSource.makeTimerSource(queue: self.queue)
+            newTimer.schedule(deadline: .now() + safeInterval, repeating: safeInterval)
+            newTimer.setEventHandler { [weak self] in
+                self?.sendNotificationIfValid(generation: currentGeneration, shouldContinue: shouldContinue)
+            }
+            self.timer = newTimer
+            newTimer.resume()
         }
-        timer = newTimer
-        newTimer.resume()
     }
 
     func stopRepeating() {
-        timer?.cancel()
-        timer = nil
+        queue.async { [weak self] in
+            guard let self else {
+                return
+            }
+
+            self.generation += 1
+            self.timer?.cancel()
+            self.timer = nil
+
+            let identifiers = self.ownedRequestIdentifiers
+            self.ownedRequestIdentifiers.removeAll()
+            self.center.removePendingNotificationRequests(withIdentifiers: identifiers)
+        }
     }
 
     func sendTestNotification() {
         sendNotification(title: "Test vibracie", body: "Toto je test pre Garmin.")
+    }
+
+    private func sendNotificationIfValid(
+        generation expectedGeneration: Int,
+        shouldContinue: () -> Bool
+    ) {
+        guard generation == expectedGeneration, shouldContinue() else {
+            timer?.cancel()
+            timer = nil
+            return
+        }
+
+        sendNotification()
     }
 
     private func sendNotification(
@@ -52,13 +91,22 @@ final class NotificationRepeater: NSObject, UNUserNotificationCenterDelegate {
         content.sound = nil
         content.threadIdentifier = "snore-alert"
 
+        let identifier = "snore-alert-\(UUID().uuidString)"
         let request = UNNotificationRequest(
-            identifier: "snore-alert-\(UUID().uuidString)",
+            identifier: identifier,
             content: content,
             trigger: nil
         )
 
-        center.add(request)
+        queue.async { [weak self] in
+            self?.ownedRequestIdentifiers.append(identifier)
+        }
+
+        center.add(request) { error in
+            if let error {
+                NSLog("SnoreAlert notification request failed: \(error.localizedDescription)")
+            }
+        }
     }
 
     func userNotificationCenter(
